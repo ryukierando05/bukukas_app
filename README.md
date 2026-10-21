@@ -1,17 +1,21 @@
-# bukukas_app
+# BukuKas - Digitalisasi Catatan Keuangan
 
-A new Flutter project.
+Aplikasi pencatatan keuangan sederhana berbasis Flutter untuk membantu pengolahan keuangan Dompet Dapur dan Dompet Usaha.
 
-## Getting Started
+## Tampilan Aplikasi
 
-This project is a starting point for a Flutter application.
+### 1. Dashboard Utama (Beranda)
+![Beranda](screenshots/beranda.png)
 
-A few resources to get you started if this is your first Flutter project:
+### 2. Input Transaksi (Pemasukan & Pengeluaran)
+![Input Transaksi](screenshots/pemasukan.png)
+![Pengeluaran](screenshots/pengeluaran.png)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 3. Laporan Visual (Pie Chart & Riwayat)
+![Laporan Visual](screenshots/laporan.png)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Fitur Utama
+- **Multi-Wallet**: Mendukung pemisahan akun Dompet Dapur dan Dompet Usaha.
+- **Input Transaksi**: Numpad kustom untuk memasukkan nominal serta kategori pengeluaran.
+- **Laporan Visual**: Pie chart dinamis berdasarkan persentase kategori transaksi.
+- **Indikator Kesehatan**: Peringatan otomatis jika pengeluaran melebihi pemasukan.

@@ -68,11 +68,17 @@ class _HomePageState extends State<HomePage> {
         String wallet = result['wallet'];
 
         if (wallet == 'Dapur') {
-          if (isIncome) dapurIncome += amount;
-          else dapurExpense += amount;
+          if (isIncome) {
+            dapurIncome += amount;
+          } else {
+            dapurExpense += amount;
+          }
         } else if (wallet == 'Usaha') {
-          if (isIncome) usahaIncome += amount;
-          else usahaExpense += amount;
+          if (isIncome) {
+            usahaIncome += amount;
+          } else {
+            usahaExpense += amount;
+          }
         }
       });
     }
@@ -82,12 +88,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     // [Responsive] Ambil info layar dari MediaQuery sekali di atas.
     final media = MediaQuery.of(context);
-    final isLandscape = media.orientation == Orientation.landscape; // [Responsive]
-    final screenWidth = media.size.width;
+    final isLandscape = media.orientation == Orientation.landscape;
 
     int currentIncome = activeWallet == 'Dapur' ? dapurIncome : usahaIncome;
     int currentExpense = activeWallet == 'Dapur' ? dapurExpense : usahaExpense;
-    int currentBalance = currentIncome - currentExpense;
 
     List<Map<String, dynamic>> visibleTransactions =
         transactions.where((t) => t['wallet'] == activeWallet).toList();
@@ -103,9 +107,8 @@ class _HomePageState extends State<HomePage> {
               expense: currentExpense,
               activeWallet: activeWallet,
             )
-          : LayoutBuilder( // [Responsive] LayoutBuilder: susun berdasarkan ruang tersedia.
+          : LayoutBuilder( 
               builder: (context, constraints) {
-                // [Responsive] Lebar konten dibatasi agar nyaman di layar lebar.
                 final contentWidth = constraints.maxWidth > 720
                     ? 680.0
                     : constraints.maxWidth;
@@ -113,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                 final header = Container(
                   width: double.infinity,
                   padding: EdgeInsets.only(
-                    top: isLandscape ? 20 : 48, // [Responsive] padding atas beda orientasi
+                    top: isLandscape ? 20 : 48, 
                     left: 24,
                     right: 24,
                     bottom: 20,
@@ -158,18 +161,15 @@ class _HomePageState extends State<HomePage> {
 
                 final cards = Column(
                   children: [
-                    // [MultiChild] Stack + Positioned: badge overlay di kartu saldo.
                     Stack(
                       children: [
-                        // Carousel saldo (MultiChild: CarouselView) di belakang badge.
                         SaldoCarousel(
                           dapurBalance: dapurBalance,
                           usahaBalance: usahaBalance,
-                          formatAmount: formatAmount,
+                          // Perbaikan: Kirim String yang sudah diformat, bukan fungsi.
                           activeWallet: activeWallet,
                           onWalletChanged: (w) => setState(() => activeWallet = w),
                         ),
-                        // Badge kecil menempel di pojok kanan atas.
                         Positioned(
                           top: 0,
                           right: 8,
@@ -191,7 +191,6 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // [Responsive] Di landscape, kartu masuk/keluar & sisa disusun Row.
                     if (isLandscape)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +224,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                     else
-                      // [MultiChild] ListView.builder untuk daftar transaksi.
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -267,7 +265,6 @@ class _HomePageState extends State<HomePage> {
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
                         child: Center(
-                          // [Responsive] Konten dipusatkan & lebarnya dibatasi.
                           child: SizedBox(width: contentWidth, child: cards),
                         ),
                       ),
@@ -277,7 +274,6 @@ class _HomePageState extends State<HomePage> {
               },
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // [MultiChild] Stack + Positioned untuk badge label di atas FAB.
       floatingActionButton: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -327,7 +323,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTab(String title, bool isSelected, String walletType) {
-    return Expanded( // [MultiChild] Expanded membagi ruang tab rata.
+    return Expanded(
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -354,7 +350,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildIncomeExpenseCard(String title, String amount, bool isIncome) {
-    return Expanded( // [MultiChild] Expanded agar dua kartu sama lebar.
+    return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),

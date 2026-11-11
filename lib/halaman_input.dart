@@ -36,9 +36,7 @@ class _InputPageState extends State<InputPage> {
 
   void _onNumberPress(String digit) {
     setState(() {
-      if (amountString.length < 12) {
-        amountString += digit;
-      }
+      if (amountString.length < 12) amountString += digit;
     });
   }
 
@@ -110,6 +108,11 @@ class _InputPageState extends State<InputPage> {
 
   @override
   Widget build(BuildContext context) {
+    // [Responsive] Baca MediaQuery untuk orientasi & lebar layar.
+    final media = MediaQuery.of(context);
+    final isLandscape = media.orientation == Orientation.landscape;
+    final screenWidth = media.size.width;
+
     bool isSaveActive = amountString.isNotEmpty && amountString != "0" && (isIncome || selectedCategory != null);
 
     return Scaffold(
@@ -124,65 +127,182 @@ class _InputPageState extends State<InputPage> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => setState(() {
-                              isIncome = true;
-                              selectedCategory = null;
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isIncome ? const Color(0xFFE8F5E9) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(26),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Pemasukan',
-                                  style: TextStyle(
-                                    color: isIncome ? const Color(0xFF087653) : Colors.grey.shade600,
-                                    fontWeight: FontWeight.bold,
+        // [Responsive] LayoutBuilder memilih susunan berdasarkan ruang tersedia.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 720;
+            // Konten inti (toggle, nominal, kategori, numpad).
+            final mainColumn = Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded( // [MultiChild]
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                isIncome = true;
+                                selectedCategory = null;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isIncome ? const Color(0xFFE8F5E9) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(26),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Pemasukan',
+                                    style: TextStyle(
+                                      color: isIncome ? const Color(0xFF087653) : Colors.grey.shade600,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => setState(() => isIncome = false),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: !isIncome ? Colors.red.shade600 : Colors.transparent,
-                                borderRadius: BorderRadius.circular(26),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Pengeluaran',
-                                  style: TextStyle(
-                                    color: !isIncome ? Colors.white : Colors.grey.shade600,
-                                    fontWeight: FontWeight.bold,
+                        Expanded( // [MultiChild]
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () => setState(() => isIncome = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: !isIncome ? Colors.red.shade600 : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(26),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Pengeluaran',
+                                    style: TextStyle(
+                                      color: !isIncome ? Colors.white : Colors.grey.shade600,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // [Responsive] FittedBox + ukuran font mengikuti lebar layar.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Rp $formattedAmount',
+                    style: TextStyle(
+                      color: isIncome ? const Color(0xFF087653) : Colors.red.shade600,
+                      fontSize: isWide ? 52 : 44,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (!isIncome) ...[
+                  const Text("Pilih kategori", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Container(
+                    // [Responsive] Tinggi grid kategori mengikuti orientasi.
+                    height: isLandscape ? 100 : 115,
+                    margin: const EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    // [MultiChild] GridView.builder untuk kategori.
+                    child: GridView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        // [Responsive] 3 kolom portrait, 4-5 kolom landscape.
+                        crossAxisCount: isLandscape ? 5 : 3,
+                        childAspectRatio: isLandscape ? 2.2 : 1.6,
+                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 6,
+                      ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final cat = categories[index];
+                        bool isSelected = selectedCategory == cat['name'];
+                        return MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () => setState(() => selectedCategory = cat['name']),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.orange.shade50 : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isSelected ? Colors.orange : Colors.grey.shade200,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(cat['icon'], size: 18, color: isSelected ? Colors.orange : Colors.blue),
+                                  const SizedBox(height: 2),
+                                  Text(cat['name'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  const SizedBox(height: 24),
+                ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  child: Column(
+                    children: [
+                      _buildNumpadRow(['1', '2', '3'], isLandscape),
+                      const SizedBox(height: 8),
+                      _buildNumpadRow(['4', '5', '6'], isLandscape),
+                      const SizedBox(height: 8),
+                      _buildNumpadRow(['7', '8', '9'], isLandscape),
+                      const SizedBox(height: 8),
+                      _buildNumpadRow(['000', '0', 'back'], isLandscape),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: isSaveActive ? _saveTransaction : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF087653),
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              enabledMouseCursor: SystemMouseCursors.click,
+                              disabledMouseCursor: SystemMouseCursors.basic,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: Text(
+                              'SIMPAN',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isSaveActive ? Colors.white : Colors.grey.shade500,
                               ),
                             ),
                           ),
@@ -191,135 +311,47 @@ class _InputPageState extends State<InputPage> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Rp $formattedAmount',
-                style: TextStyle(
-                  color: isIncome ? const Color(0xFF087653) : Colors.red.shade600,
-                  fontSize: 44,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (!isIncome) ...[
-                const Text("Pilih kategori", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                const SizedBox(height: 8),
-                Container(
-                  height: 115,
-                  margin: const EdgeInsets.symmetric(horizontal: 28),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: GridView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 1.6,
-                      crossAxisSpacing: 6,
-                      mainAxisSpacing: 6,
-                    ),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final cat = categories[index];
-                      bool isSelected = selectedCategory == cat['name'];
-                      return MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => setState(() => selectedCategory = cat['name']),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.orange.shade50 : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: isSelected ? Colors.orange : Colors.grey.shade200,
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(cat['icon'], size: 18, color: isSelected ? Colors.orange : Colors.blue),
-                                const SizedBox(height: 2),
-                                Text(cat['name'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ] else ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
               ],
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                child: Column(
-                  children: [
-                    _buildNumpadRow(['1', '2', '3']),
-                    const SizedBox(height: 8),
-                    _buildNumpadRow(['4', '5', '6']),
-                    const SizedBox(height: 8),
-                    _buildNumpadRow(['7', '8', '9']),
-                    const SizedBox(height: 8),
-                    _buildNumpadRow(['000', '0', 'back']),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: isSaveActive ? _saveTransaction : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF087653),
-                            disabledBackgroundColor: Colors.grey.shade300,
-                            enabledMouseCursor: SystemMouseCursors.click,
-                            disabledMouseCursor: SystemMouseCursors.basic,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: Text(
-                            'SIMPAN',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isSaveActive ? Colors.white : Colors.grey.shade500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            );
+
+            // [Responsive] Di layar sangat lebar (tablet/desktop), beri margin tengah.
+            if (constraints.maxWidth > 720) {
+              return SingleChildScrollView(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: mainColumn,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+              );
+            }
+
+            return SingleChildScrollView(child: mainColumn);
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNumpadRow(List<String> items) {
+  Widget _buildNumpadRow(List<String> items, bool isLandscape) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildNumpadButton(items[0]),
+        _buildNumpadButton(items[0], isLandscape),
         const SizedBox(width: 12),
-        _buildNumpadButton(items[1]),
+        _buildNumpadButton(items[1], isLandscape),
         const SizedBox(width: 12),
-        _buildNumpadButton(items[2]),
+        _buildNumpadButton(items[2], isLandscape),
       ],
     );
   }
 
-  Widget _buildNumpadButton(String label) {
+  Widget _buildNumpadButton(String label, bool isLandscape) {
     bool isIcon = label == 'back';
+    // [Responsive] Ukuran tombol menyesuaikan orientasi.
+    final btnWidth = isLandscape ? 90.0 : 75.0;
+    final btnHeight = isLandscape ? 44.0 : 48.0;
     return InkWell(
       mouseCursor: SystemMouseCursors.click,
       onTap: () {
@@ -331,13 +363,13 @@ class _InputPageState extends State<InputPage> {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 75,
-        height: 48,
+        width: btnWidth,
+        height: btnHeight,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(color: Colors.grey.shade200, blurRadius: 2, offset: const Offset(0, 1))
+            BoxShadow(color: Colors.grey.shade200, blurRadius: 2, offset: const Offset(0, 1)),
           ],
         ),
         child: Center(

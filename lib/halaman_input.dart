@@ -69,6 +69,9 @@ class _InputPageState extends State<InputPage> {
       },
     );
 
+    // Peringatan hilang jika kita menambahkan pengecekan `mounted` di sini
+    if (!mounted) return;
+
     if (chosenWallet != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -108,10 +111,9 @@ class _InputPageState extends State<InputPage> {
 
   @override
   Widget build(BuildContext context) {
-    // [Responsive] Baca MediaQuery untuk orientasi & lebar layar.
+    // [Responsive] Baca MediaQuery untuk orientasi
     final media = MediaQuery.of(context);
     final isLandscape = media.orientation == Orientation.landscape;
-    final screenWidth = media.size.width;
 
     bool isSaveActive = amountString.isNotEmpty && amountString != "0" && (isIncome || selectedCategory != null);
 
@@ -144,7 +146,7 @@ class _InputPageState extends State<InputPage> {
                     ),
                     child: Row(
                       children: [
-                        Expanded( // [MultiChild]
+                        Expanded(
                           child: MouseRegion(
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
@@ -171,7 +173,7 @@ class _InputPageState extends State<InputPage> {
                             ),
                           ),
                         ),
-                        Expanded( // [MultiChild]
+                        Expanded(
                           child: MouseRegion(
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
@@ -230,7 +232,7 @@ class _InputPageState extends State<InputPage> {
                     child: GridView.builder(
                       physics: const BouncingScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        // [Responsive] 3 kolom portrait, 4-5 kolom landscape.
+                        // [Responsive] 3 kolom portrait, 5 kolom landscape.
                         crossAxisCount: isLandscape ? 5 : 3,
                         childAspectRatio: isLandscape ? 2.2 : 1.6,
                         crossAxisSpacing: 6,

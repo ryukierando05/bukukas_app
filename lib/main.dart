@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'halaman_input.dart';
 import 'halaman_laporan.dart';
-import 'widgets/saldo_carousel.dart';
+import 'saldo_carousel.dart';
 
 void main() {
   runApp(const BukuKasApp());

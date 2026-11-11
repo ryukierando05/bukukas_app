@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'halaman_input.dart';
 import 'halaman_laporan.dart';
-import 'halaman_stok.dart';
-import 'halaman_profil.dart';
 import 'saldo_carousel.dart';
 
 void main() {
@@ -46,7 +44,6 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> transactions = [];
 
   String formatAmount(int amount) {
-    // Perbaikan bug saldo minus
     String prefix = amount < 0 ? "-" : "";
     String amountStr = amount.abs().toString(); 
     
@@ -104,7 +101,8 @@ class _HomePageState extends State<HomePage> {
     final usahaBalance = usahaIncome - usahaExpense;
 
     return Scaffold(
-      // --- LOGIKA NAVIGASI HALAMAN ---
+      // Hanya ada 2 kondisi: Laporan (index 1) atau Beranda (index 0)
+      // Menu ke-2 dan ke-3 kita buat mengarah ke Beranda saja (atau kita nonaktifkan)
       body: selectedNavIndex == 1
           ? LaporanPage(
               transactions: transactions,
@@ -112,152 +110,147 @@ class _HomePageState extends State<HomePage> {
               expense: currentExpense,
               activeWallet: activeWallet,
             )
-          : selectedNavIndex == 2
-              ? const HalamanStok() // Halaman Stok
-              : selectedNavIndex == 3
-                  ? const HalamanProfil() // Halaman Profil
-                  : LayoutBuilder( // Halaman Beranda (Index 0)
-                      builder: (context, constraints) {
-                        final isMobile = constraints.maxWidth < 600;
-                        final contentWidth = constraints.maxWidth > 720
-                            ? 680.0
-                            : constraints.maxWidth;
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 600;
+                final contentWidth = constraints.maxWidth > 720
+                    ? 680.0
+                    : constraints.maxWidth;
 
-                        final header = Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.only(
-                            top: isLandscape ? 20 : 48,
-                            left: 24,
-                            right: 24,
-                            bottom: 20,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF033524),
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(32),
-                              bottomRight: Radius.circular(32),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isLandscape
-                                    ? 'Halo, Pejuang Keluarga! 👋 (Landscape)'
-                                    : 'Halo, Pejuang Keluarga! 👋',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A5C41),
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: Row(
-                                  children: [
-                                    _buildTab('🏠 Dompet Dapur', activeWallet == 'Dapur', 'Dapur'),
-                                    _buildTab('🏪 Dompet Usaha', activeWallet == 'Usaha', 'Usaha'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        final cards = Column(
+                final header = Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    top: isLandscape ? 20 : 48,
+                    left: 24,
+                    right: 24,
+                    bottom: 20,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF033524),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isLandscape
+                            ? 'Halo, Pejuang Keluarga! 👋 (Landscape)'
+                            : 'Halo, Pejuang Keluarga! 👋',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0A5C41),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        child: Row(
                           children: [
-                            SaldoCarousel(
-                              dapurBalance: dapurBalance,
-                              usahaBalance: usahaBalance,
-                              activeWallet: activeWallet,
-                              onWalletChanged: (w) => setState(() => activeWallet = w),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true)),
-                                const SizedBox(width: 12),
-                                Expanded(child: _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false)),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('Terbaru', style: TextStyle(color: Color(0xFF033524), fontSize: 16, fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(height: 8),
-                            if (visibleTransactions.isEmpty)
-                              Container(
-                                width: double.infinity,
-                                height: 160,
-                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                                child: const Center(
-                                  child: Text('Kosong...', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontWeight: FontWeight.w500)),
-                                ),
-                              )
-                            else
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: visibleTransactions.length,
-                                padding: const EdgeInsets.only(bottom: 80), 
-                                itemBuilder: (context, index) {
-                                  final tx = visibleTransactions[index];
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            tx['category'] ?? 'Transaksi',
-                                            style: const TextStyle(fontWeight: FontWeight.bold),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${tx['isIncome'] ? '+' : '-'}${formatAmount(tx['amount'])}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: tx['isIncome'] ? Colors.green.shade700 : Colors.red.shade700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
+                            _buildTab('🏠 Dompet Dapur', activeWallet == 'Dapur', 'Dapur'),
+                            _buildTab('🏪 Dompet Usaha', activeWallet == 'Usaha', 'Usaha'),
                           ],
-                        );
+                        ),
+                      ),
+                    ],
+                  ),
+                );
 
-                        return Column(
-                          children: [
-                            header,
-                            Expanded(
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                                child: Center(
-                                  child: SizedBox(
-                                    width: isMobile ? double.infinity : contentWidth, 
-                                    child: cards,
+                final cards = Column(
+                  children: [
+                    SaldoCarousel(
+                      dapurBalance: dapurBalance,
+                      usahaBalance: usahaBalance,
+                      activeWallet: activeWallet,
+                      onWalletChanged: (w) => setState(() => activeWallet = w),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Terbaru', style: TextStyle(color: Color(0xFF033524), fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 8),
+                    if (visibleTransactions.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        height: 160,
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: const Center(
+                          child: Text('Kosong...', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontWeight: FontWeight.w500)),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: visibleTransactions.length,
+                        padding: const EdgeInsets.only(bottom: 80), 
+                        itemBuilder: (context, index) {
+                          final tx = visibleTransactions[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    tx['category'] ?? 'Transaksi',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
+                                Text(
+                                  '${tx['isIncome'] ? '+' : '-'}${formatAmount(tx['amount'])}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: tx['isIncome'] ? Colors.green.shade700 : Colors.red.shade700,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        );
-                      },
+                          );
+                        },
+                      ),
+                  ],
+                );
+
+                return Column(
+                  children: [
+                    header,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        child: Center(
+                          child: SizedBox(
+                            width: isMobile ? double.infinity : contentWidth, 
+                            child: cards,
+                          ),
+                        ),
+                      ),
                     ),
+                  ],
+                );
+              },
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // --- TOMBOL (+) HANYA MUNCUL DI BERANDA ---
       floatingActionButton: selectedNavIndex == 0 
           ? Stack(
               clipBehavior: Clip.none,
@@ -290,8 +283,7 @@ class _HomePageState extends State<HomePage> {
                   ),
               ],
             )
-          : null, // Sembunyikan tombol (+) jika bukan di Beranda
-          
+          : null,
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
@@ -302,8 +294,9 @@ class _HomePageState extends State<HomePage> {
             _buildBottomNavIcon(Icons.home, 'Beranda', 0),
             _buildBottomNavIcon(Icons.bar_chart, 'Laporan', 1),
             const SizedBox(width: 48),
-            _buildBottomNavIcon(Icons.inventory_2, 'Utang/Stok', 2),
-            _buildBottomNavIcon(Icons.person, 'Profil', 3),
+            // Tombol ini kita biarkan ada, tapi kalau diklik tidak terjadi apa-apa (hanya UI)
+            _buildBottomNavIcon(Icons.inventory_2, 'Utang/Stok', 0), 
+            _buildBottomNavIcon(Icons.person, 'Profil', 0),
           ],
         ),
       ),

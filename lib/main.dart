@@ -41,12 +41,11 @@ class _HomePageState extends State<HomePage> {
   int usahaIncome = 0;
   int usahaExpense = 0;
 
-  List<Map<String, dynamic>> transactions = [];
+  final List< Map< String, dynamic > > transactions = [];
 
   String formatAmount(int amount) {
     String prefix = amount < 0 ? "-" : "";
-    String amountStr = amount.abs().toString(); 
-    
+    String amountStr = amount.abs().toString();
     String result = "";
     String reversed = amountStr.split('').reversed.join('');
     for (int i = 0; i < reversed.length; i++) {
@@ -94,15 +93,13 @@ class _HomePageState extends State<HomePage> {
     int currentIncome = activeWallet == 'Dapur' ? dapurIncome : usahaIncome;
     int currentExpense = activeWallet == 'Dapur' ? dapurExpense : usahaExpense;
 
-    List<Map<String, dynamic>> visibleTransactions =
+    final visibleTransactions =
         transactions.where((t) => t['wallet'] == activeWallet).toList();
 
     final dapurBalance = dapurIncome - dapurExpense;
     final usahaBalance = usahaIncome - usahaExpense;
 
     return Scaffold(
-      // Hanya ada 2 kondisi: Laporan (index 1) atau Beranda (index 0)
-      // Menu ke-2 dan ke-3 kita buat mengarah ke Beranda saja (atau kita nonaktifkan)
       body: selectedNavIndex == 1
           ? LaporanPage(
               transactions: transactions,
@@ -135,11 +132,9 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        isLandscape
-                            ? 'Halo, Pejuang Keluarga! 👋 (Landscape)'
-                            : 'Halo, Pejuang Keluarga! 👋',
-                        style: const TextStyle(
+                      const Text(
+                        'Halo, Pejuang Keluarga! 👋',
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -175,9 +170,9 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true)),
+                        _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false)),
+                        _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -200,7 +195,7 @@ class _HomePageState extends State<HomePage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: visibleTransactions.length,
-                        padding: const EdgeInsets.only(bottom: 80), 
+                        padding: const EdgeInsets.only(bottom: 80),
                         itemBuilder: (context, index) {
                           final tx = visibleTransactions[index];
                           return Container(
@@ -240,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                         child: Center(
                           child: SizedBox(
-                            width: isMobile ? double.infinity : contentWidth, 
+                            width: isMobile ? double.infinity : contentWidth,
                             child: cards,
                           ),
                         ),
@@ -251,7 +246,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: selectedNavIndex == 0 
+      floatingActionButton: selectedNavIndex == 0
           ? Stack(
               clipBehavior: Clip.none,
               children: [
@@ -263,7 +258,7 @@ class _HomePageState extends State<HomePage> {
                   elevation: 4,
                   child: const Icon(Icons.add, color: Colors.white, size: 28),
                 ),
-                if (media.size.width > 600) 
+                if (media.size.width > 600)
                   Positioned(
                     top: -30,
                     left: 0,
@@ -294,9 +289,8 @@ class _HomePageState extends State<HomePage> {
             _buildBottomNavIcon(Icons.home, 'Beranda', 0),
             _buildBottomNavIcon(Icons.bar_chart, 'Laporan', 1),
             const SizedBox(width: 48),
-            // Tombol ini kita biarkan ada, tapi kalau diklik tidak terjadi apa-apa (hanya UI)
-            _buildBottomNavIcon(Icons.inventory_2, 'Utang/Stok', 0), 
-            _buildBottomNavIcon(Icons.person, 'Profil', 0),
+            _buildBottomNavIcon(Icons.inventory_2, 'Utang/Stok', 2),
+            _buildBottomNavIcon(Icons.person, 'Profil', 3),
           ],
         ),
       ),
@@ -373,10 +367,15 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavIcon(IconData icon, String label, int navIndex) {
     final isSelected = selectedNavIndex == navIndex;
     final color = isSelected ? const Color(0xFF087653) : Colors.grey;
+    final isInteractive = navIndex == 0 || navIndex == 1;
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
+      cursor: isInteractive ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
-        onTap: () => setState(() => selectedNavIndex = navIndex),
+        onTap: () {
+          if (isInteractive) {
+            setState(() => selectedNavIndex = navIndex);
+          }
+        },
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,

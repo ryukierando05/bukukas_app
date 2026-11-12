@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'halaman_input.dart';
 import 'halaman_laporan.dart';
+import 'halaman_profil.dart';
+import 'halaman_utang_stok.dart';
 import 'saldo_carousel.dart';
 
 void main() {
@@ -29,10 +31,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State< HomePage > createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State< HomePage > {
   int selectedNavIndex = 0;
   String activeWallet = 'Dapur';
 
@@ -41,7 +43,14 @@ class _HomePageState extends State<HomePage> {
   int usahaIncome = 0;
   int usahaExpense = 0;
 
+  final ProfilData profilData = ProfilData();
   final List< Map< String, dynamic > > transactions = [];
+  final List< UtangItem > utangList = [];
+  final List< StockItem > stockList = [
+    StockItem(name: 'Bahan', pricePerUnit: 10000, quantity: 0),
+    StockItem(name: 'Bensin', pricePerUnit: 10000, quantity: 0),
+    StockItem(name: 'Gas', pricePerUnit: 20000, quantity: 0),
+  ];
 
   String formatAmount(int amount) {
     String prefix = amount < 0 ? "-" : "";
@@ -63,7 +72,7 @@ class _HomePageState extends State<HomePage> {
 
     if (result != null) {
       setState(() {
-        transactions.insert(0, result as Map<String, dynamic>);
+        transactions.insert(0, result as Map< String, dynamic >);
         bool isIncome = result['isIncome'];
         int amount = result['amount'];
         String wallet = result['wallet'];
@@ -85,6 +94,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _handleRestockConfirmed(StockItem item, int qty, int totalCost, String wallet) {
+    setState(() {
+      item.quantity = (item.quantity + qty).clamp(0, item.maxQuantity);
+      if (wallet == 'Dapur') {
+        dapurExpense += totalCost;
+      } else if (wallet == 'Usaha') {
+        usahaExpense += totalCost;
+      }
+      transactions.insert(0, {
+        'isIncome': false,
+        'amount': totalCost,
+        'wallet': wallet,
+        'category': item.name,
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -99,152 +125,179 @@ class _HomePageState extends State<HomePage> {
     final dapurBalance = dapurIncome - dapurExpense;
     final usahaBalance = usahaIncome - usahaExpense;
 
-    return Scaffold(
-      body: selectedNavIndex == 1
-          ? LaporanPage(
-              transactions: transactions,
-              income: currentIncome,
-              expense: currentExpense,
-              activeWallet: activeWallet,
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 600;
-                final contentWidth = constraints.maxWidth > 720
-                    ? 680.0
-                    : constraints.maxWidth;
+    Widget currentBody;
+    if (selectedNavIndex == 1) {
+      currentBody = LaporanPage(
+        transactions: transactions,
+        income: currentIncome,
+        expense: currentExpense,
+        activeWallet: activeWallet,
+      );
+    } else if (selectedNavIndex == 2) {
+      currentBody = UtangStokPage(
+        utangList: utangList,
+        stockList: stockList,
+        activeWallet: activeWallet,
+        dapurBalance: dapurBalance,
+        usahaBalance: usahaBalance,
+        onDataChanged: () => setState(() {}),
+        onRestockConfirmed: _handleRestockConfirmed,
+      );
+    } else if (selectedNavIndex == 3) {
+      currentBody = ProfilPage(
+        profilData: profilData,
+        transactions: transactions,
+        utangList: utangList,
+        stockList: stockList,
+        dapurIncome: dapurIncome,
+        dapurExpense: dapurExpense,
+        usahaIncome: usahaIncome,
+        usahaExpense: usahaExpense,
+        onProfileUpdated: () => setState(() {}),
+      );
+    } else {
+      currentBody = LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+          final contentWidth = constraints.maxWidth > 720
+              ? 680.0
+              : constraints.maxWidth;
 
-                final header = Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.only(
-                    top: isLandscape ? 20 : 48,
-                    left: 24,
-                    right: 24,
-                    bottom: 20,
+          final header = Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: isLandscape ? 20 : 48,
+              left: 24,
+              right: 24,
+              bottom: 20,
+            ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF033524),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Halo, Pejuang Keluarga! 👋',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF033524),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(32),
-                      bottomRight: Radius.circular(32),
-                    ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A5C41),
+                    borderRadius: BorderRadius.circular(32),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      const Text(
-                        'Halo, Pejuang Keluarga! 👋',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0A5C41),
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        child: Row(
-                          children: [
-                            _buildTab('🏠 Dompet Dapur', activeWallet == 'Dapur', 'Dapur'),
-                            _buildTab('🏪 Dompet Usaha', activeWallet == 'Usaha', 'Usaha'),
-                          ],
-                        ),
-                      ),
+                      _buildTab('🏠 Dompet Dapur', activeWallet == 'Dapur', 'Dapur'),
+                      _buildTab('🏪 Dompet Usaha', activeWallet == 'Usaha', 'Usaha'),
                     ],
                   ),
-                );
-
-                final cards = Column(
-                  children: [
-                    SaldoCarousel(
-                      dapurBalance: dapurBalance,
-                      usahaBalance: usahaBalance,
-                      activeWallet: activeWallet,
-                      onWalletChanged: (w) => setState(() => activeWallet = w),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true),
-                        const SizedBox(width: 12),
-                        _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Terbaru', style: TextStyle(color: Color(0xFF033524), fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(height: 8),
-                    if (visibleTransactions.isEmpty)
-                      Container(
-                        width: double.infinity,
-                        height: 160,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                        child: const Center(
-                          child: Text('Kosong...', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontWeight: FontWeight.w500)),
-                        ),
-                      )
-                    else
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: visibleTransactions.length,
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemBuilder: (context, index) {
-                          final tx = visibleTransactions[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    tx['category'] ?? 'Transaksi',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Text(
-                                  '${tx['isIncome'] ? '+' : '-'}${formatAmount(tx['amount'])}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: tx['isIncome'] ? Colors.green.shade700 : Colors.red.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                  ],
-                );
-
-                return Column(
-                  children: [
-                    header,
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                        child: Center(
-                          child: SizedBox(
-                            width: isMobile ? double.infinity : contentWidth,
-                            child: cards,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                ),
+              ],
             ),
+          );
+
+          final cards = Column(
+            children: [
+              SaldoCarousel(
+                dapurBalance: dapurBalance,
+                usahaBalance: usahaBalance,
+                activeWallet: activeWallet,
+                onWalletChanged: (w) => setState(() => activeWallet = w),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildIncomeExpenseCard('↓ Uang Masuk', 'Rp ${formatAmount(currentIncome)}', true),
+                  const SizedBox(width: 12),
+                  _buildIncomeExpenseCard('↑ Uang Keluar', 'Rp ${formatAmount(currentExpense)}', false),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Terbaru', style: TextStyle(color: Color(0xFF033524), fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 8),
+              if (visibleTransactions.isEmpty)
+                Container(
+                  width: double.infinity,
+                  height: 160,
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: const Center(
+                    child: Text('Kosong...', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontWeight: FontWeight.w500)),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: visibleTransactions.length,
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemBuilder: (context, index) {
+                    final tx = visibleTransactions[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              tx['category'] ?? 'Transaksi',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '${tx['isIncome'] ? '+' : '-'}${formatAmount(tx['amount'])}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: tx['isIncome'] ? Colors.green.shade700 : Colors.red.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          );
+
+          return Column(
+            children: [
+              header,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: Center(
+                    child: SizedBox(
+                      width: isMobile ? double.infinity : contentWidth,
+                      child: cards,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    return Scaffold(
+      body: currentBody,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: selectedNavIndex == 0
           ? Stack(
@@ -367,7 +420,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavIcon(IconData icon, String label, int navIndex) {
     final isSelected = selectedNavIndex == navIndex;
     final color = isSelected ? const Color(0xFF087653) : Colors.grey;
-    final isInteractive = navIndex == 0 || navIndex == 1;
+    final isInteractive = navIndex >= 0 && navIndex <= 3;
     return MouseRegion(
       cursor: isInteractive ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
